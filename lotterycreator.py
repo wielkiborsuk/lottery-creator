@@ -1,14 +1,13 @@
 import json
 import csv
 import random
+import pathlib
+import click
 
 
 def load_csv_file(name):
     with open(name, 'r') as f:
-        lines = list(csv.reader(f))
-        keys = lines[0]
-        return [{keys[i]: line[i] for i in range(len(line))}
-                for line in lines[1:]]
+        return list(csv.DictReader(f))
 
 
 def load_json_file(name):
@@ -18,33 +17,84 @@ def load_json_file(name):
 
 
 def load_participants_info(format, name):
+    file_path = pathlib.Path('../data').joinpath(name)
+
     if format == 'csv':
-        return load_csv_file(name)
+        return load_csv_file(file_path)
     elif format == 'json':
-        return load_json_file(name)
+        return load_json_file(file_path)
     else:
         return []
 
 
-def draw(participants, winner_count):
+def load_lottery_template(name):
+    base_path = pathlib.Path('../data/lottery_templates')
+
+    if name:
+        file_path = base_path.joinpath(name)
+    else:
+        file_path = sorted(base_path.iterdir())[0]
+
+    with open(file_path, 'r') as f:
+        return json.load(f)
+
+
+def prepare_prizes(lottery_template):
+    flat_prize_list = []
+    for p in lottery_template['prizes']:
+        for i in range(p.get('amount', 1)):
+            flat_prize_list.append(p)
+
+    return flat_prize_list
+
+
+def draw(participants, lottery_template):
+    participants = participants[:]
+    flat_prize_list = prepare_prizes(lottery_template)
     winners = []
-    for i in range(winner_count):
+    while participants and flat_prize_list:
         weights = [float(p.get('weight', '1')) for p in participants]
-        (winner, ) = random.choices(participants, weights=weights)
-        winners.append(winner)
+        winner = random.choices(participants, weights=weights)[0]
+        winners.append((winner, flat_prize_list.pop(0)))
         participants.remove(winner)
     return winners
 
 
-def main():
-    input_file = '../data/participants2.json'
-    file_format = 'json'
-    winner_count = 3
+def write_json_report(winners, lottery_template, output):
+    winner_list = [{'participant': winner, 'prize': prize}
+                   for (winner, prize) in winners]
+    report = {'template_name': lottery_template['name'],
+              'winners': winner_list}
+    with pathlib.Path(output).open('w') as f:
+        json.dump(report, f)
 
-    participants = load_participants_info(file_format, input_file)
-    winners = draw(participants, winner_count)
-    for winner in winners:
-        print('{} {}'.format(winner['first_name'], winner['last_name']))
+
+def write_output(winners, lottery_template, output):
+    print('Template: {}'.format(lottery_template['name']))
+    print('Winners:')
+    for winner, prize in winners:
+        print('{} {}, {}'.format(winner['first_name'], winner['last_name'],
+                                 prize['name']))
+
+    if output:
+        write_json_report(winners, lottery_template,  output)
+
+
+@click.command(name='lotterycreator')
+@click.argument('participants_file', required=True)
+@click.option('--format', default='json',
+              help='Format of participants file, json or csv')
+@click.option('--template',
+              help='Lottery template file (in lottery_templates directory)')
+@click.option('--output', help='Output file for lottery report')
+def main(participants_file='', format='json',
+         template='', output=''):
+
+    participants = load_participants_info(format, participants_file)
+    lottery_template = load_lottery_template(template)
+    winners = draw(participants, lottery_template)
+
+    write_output(winners, lottery_template, output)
 
 
 if __name__ == "__main__":
