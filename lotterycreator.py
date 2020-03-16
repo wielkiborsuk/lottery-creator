@@ -1,7 +1,7 @@
 import json
 import csv
-import random
-import pathlib
+from random import choices
+from pathlib import Path
 import click
 
 
@@ -17,7 +17,7 @@ def load_json_file(name):
 
 
 def load_participants_info(format, name):
-    file_path = pathlib.Path('../data').joinpath(name)
+    file_path = Path('../data').joinpath(name)
 
     if format == 'csv':
         return load_csv_file(file_path)
@@ -28,7 +28,7 @@ def load_participants_info(format, name):
 
 
 def load_lottery_template(name):
-    base_path = pathlib.Path('../data/lottery_templates')
+    base_path = Path('../data/lottery_templates')
 
     if name:
         file_path = base_path.joinpath(name)
@@ -54,7 +54,7 @@ def draw(participants, lottery_template):
     winners = []
     while participants and flat_prize_list:
         weights = [float(p.get('weight', '1')) for p in participants]
-        winner = random.choices(participants, weights=weights)[0]
+        winner = choices(participants, weights=weights)[0]
         winners.append((winner, flat_prize_list.pop(0)))
         participants.remove(winner)
     return winners
@@ -65,7 +65,7 @@ def write_json_report(winners, lottery_template, output):
                    for (winner, prize) in winners]
     report = {'template_name': lottery_template['name'],
               'winners': winner_list}
-    with pathlib.Path(output).open('w') as f:
+    with Path(output).open('w') as f:
         json.dump(report, f)
 
 
@@ -82,13 +82,12 @@ def write_output(winners, lottery_template, output):
 
 @click.command(name='lotterycreator')
 @click.argument('participants_file', required=True)
-@click.option('--format', default='json',
-              help='Format of participants file, json or csv')
+@click.option('--format', type=click.Choice(['json', 'csv']), default='json',
+              help='Format of participants file')
 @click.option('--template',
               help='Lottery template file (in lottery_templates directory)')
 @click.option('--output', help='Output file for lottery report')
-def main(participants_file='', format='json',
-         template='', output=''):
+def main(participants_file, format, template, output):
 
     participants = load_participants_info(format, participants_file)
     lottery_template = load_lottery_template(template)
