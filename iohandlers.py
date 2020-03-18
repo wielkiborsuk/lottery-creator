@@ -9,12 +9,12 @@ class DataInputHandler(object):
     data_dir = os.environ.get('LOTTERY_DATA', '../data')
 
     @classmethod
-    def load_csv_file(cls, name):
+    def __load_csv_file(cls, name):
         with open(name, 'r') as f:
             return list(csv.DictReader(f))
 
     @classmethod
-    def load_json_file(cls, name):
+    def __load_json_file(cls, name):
         with open(name, 'r') as f:
             participants = json.load(f)
             return participants
@@ -25,9 +25,9 @@ class DataInputHandler(object):
 
         participants_data = []
         if format == 'csv':
-            participants_data = cls.load_csv_file(file_path)
+            participants_data = cls.__load_csv_file(file_path)
         elif format == 'json':
-            participants_data = cls.load_json_file(file_path)
+            participants_data = cls.__load_json_file(file_path)
 
         return [Participant(**p) for p in participants_data]
 
@@ -49,7 +49,7 @@ class DataInputHandler(object):
 
 class ReportHandler(object):
     @staticmethod
-    def readable_report(lottery: Lottery):
+    def print_readable_report(lottery: Lottery):
         print('Template: {}'.format(lottery.name))
         print('Winners:')
         for winner, prize in lottery.winners:

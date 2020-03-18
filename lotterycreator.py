@@ -15,7 +15,7 @@ def main(participants_file, format, template, output):
     lottery = DataInputHandler.load_lottery_template(template)
     lottery.draw(participants)
 
-    ReportHandler.readable_report(lottery)
+    ReportHandler.print_readable_report(lottery)
     if output:
         ReportHandler.write_json_report(lottery, output)
 
