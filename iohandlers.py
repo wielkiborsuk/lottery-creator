@@ -1,11 +1,12 @@
 import json
 import csv
+import os
 from pathlib import Path
 from model import Participant, Prize, Lottery
 
 
 class DataInputHandler(object):
-    data_dir = '../data'
+    data_dir = os.environ.get('LOTTERY_DATA', '../data')
 
     @classmethod
     def load_csv_file(cls, name):
@@ -63,4 +64,3 @@ class ReportHandler(object):
                   'winners': winner_list}
         with Path(output).open('w') as f:
             json.dump(report, f)
-
