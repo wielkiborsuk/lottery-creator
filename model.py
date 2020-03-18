@@ -4,7 +4,6 @@ from random import choices
 
 Participant = namedtuple('Participant',
                          ['id', 'first_name', 'last_name', 'weight'])
-Participant.__new__.__defaults__ = (None, None, None, 1)
 
 Prize = namedtuple('Prize', ['id', 'name', 'amount'])
 
@@ -16,15 +15,15 @@ class Lottery(object):
 
     def draw(self, participants):
         participants = participants[:]
-        flat_prize_list = self.__prepare_prizes()
+        flat_prize_list = self._prepare_prizes()
         self.winners = []
         while participants and flat_prize_list:
-            weights = [float(p.weight) for p in participants]
+            weights = [p.weight for p in participants]
             winner = choices(participants, weights=weights)[0]
             self.winners.append((winner, flat_prize_list.pop(0)))
             participants.remove(winner)
 
-    def __prepare_prizes(self):
+    def _prepare_prizes(self):
         flat_prize_list = []
         for p in self.prizes:
             for i in range(p.amount):
