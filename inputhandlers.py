@@ -11,13 +11,19 @@ class DataInputHandler:
     @staticmethod
     def _load_csv_file(name):
         with open(name, 'r') as f:
-            return list(csv.DictReader(f))
+            participants = list(csv.DictReader(f))
+            if not participants:
+                raise MalformedInputFileError
+            return participants
 
     @staticmethod
     def _load_json_file(name):
-        with open(name, 'r') as f:
-            participants = json.load(f)
-            return participants
+        try:
+            with open(name, 'r') as f:
+                participants = json.load(f)
+                return participants
+        except json.decoder.JSONDecodeError as e:
+            raise MalformedInputFileError from e
 
     def load_participants_info(self, format, name):
         file_path = Path(self.data_dir).joinpath(name)
@@ -46,3 +52,7 @@ class DataInputHandler:
                       for p in template['prizes']]
 
             return Lottery(template['name'], prizes)
+
+
+class MalformedInputFileError(ValueError):
+    pass

@@ -1,5 +1,4 @@
-from json.decoder import JSONDecodeError
-from inputhandlers import DataInputHandler
+from inputhandlers import DataInputHandler, MalformedInputFileError
 from pytest import fixture, raises
 
 
@@ -32,6 +31,6 @@ class TestInputHandler:
         assert last_participant.weight == 5.0
 
     def test_load_wrong_format_json(self, input_handler):
-        with raises(JSONDecodeError):
+        with raises(MalformedInputFileError):
             input_handler.load_participants_info(
                 'json', '5_participants_weighted.csv')
