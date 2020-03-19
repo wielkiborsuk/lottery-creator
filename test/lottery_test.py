@@ -13,7 +13,7 @@ class TestLottery:
 
         drawn_prizes = [prize for (winner, prize) in lottery.winners]
         for prize in prizes:
-            assert prize in drawn_prizes
+            assert prize in drawn_prizes, 'every prize should get drawn'
 
     def test_draw_all_participants(self):
         # with enough prizes every participant will get drawn
@@ -25,7 +25,8 @@ class TestLottery:
 
         winners = [winner for (winner, prize) in lottery.winners]
         assert all([participant in winners
-                    for participant in participants])
+                    for participant in participants]
+                   ), 'all participants should win'
 
     def test_prize_amounts_assign_multiple_prizes(self):
         prizes = self._generate_prizes(3, lambda x: 2*x+1)
@@ -55,13 +56,13 @@ class TestLottery:
         lottery.draw(participants)
 
         winners = [winner for (winner, prize) in lottery.winners]
-        assert len(winners) == 4
+        assert len(winners) == len(participants), 'every participant wins'
 
         assert all([participant in winners
-                    for participant in participants])
+                    for participant in participants]), 'every participant wins'
 
         drawn_prizes = [prize for (winner, prize) in lottery.winners]
-        assert prizes[:4] == drawn_prizes
+        assert prizes[:4] == drawn_prizes, 'only draw prizes for participants'
 
     def _generate_prizes(self, count, amount_lambda=lambda x: 1):
         return [Prize(c+1, f'prize{c+1}', amount_lambda(c))
