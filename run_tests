@@ -1,0 +1,5 @@
+#!/bin/bash
+
+. venv/bin/activate
+
+while inotifywait -re CLOSE_WRITE test; do py.test; done
