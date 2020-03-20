@@ -8,13 +8,19 @@ from model import Participant, Prize, Lottery
 class DataInputHandler:
     data_dir = os.environ.get('LOTTERY_DATA', '../data')
 
-    @staticmethod
-    def _load_csv_file(name):
+    @classmethod
+    def _load_csv_file(cls, name):
         with open(name, 'r') as f:
             participants = list(csv.DictReader(f))
-            if not participants:
+            # CSV format doesn't allow strict validation, we can attempt this
+            if not cls._participants_data_valid(participants):
                 raise MalformedInputFileError
             return participants
+
+    @staticmethod
+    def _participants_data_valid(participants):
+        keys = ('id', 'first_name', 'last_name')
+        return participants and all(key in participants[0] for key in keys)
 
     @staticmethod
     def _load_json_file(name):

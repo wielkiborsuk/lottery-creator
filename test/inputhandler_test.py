@@ -1,5 +1,6 @@
 from inputhandlers import DataInputHandler, MalformedInputFileError
-from pytest import fixture, raises
+from mock import patch
+from pytest import fixture, raises, mark
 
 
 @fixture
@@ -34,3 +35,14 @@ class TestInputHandler:
         with raises(MalformedInputFileError):
             input_handler.load_participants_info(
                 'json', '5_participants_weighted.csv')
+
+    def test_load_wrong_format_csv(self, input_handler):
+        with raises(MalformedInputFileError):
+            input_handler.load_participants_info(
+                'csv', '3_participants.json')
+
+    @patch('pathlib.Path.iterdir')
+    @mark.parametrize("files", [["abc_template.json", "bcd_template.json"]])
+    def test_load_lottery_template_default(self, input_handler, files):
+        # TODO - work in progress
+        input_handler.load_lottery_template('')
