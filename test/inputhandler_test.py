@@ -1,6 +1,7 @@
 from inputhandlers import DataInputHandler, MalformedInputFileError
 from mock import patch
 from pytest import fixture, raises, mark
+import pathlib
 
 
 @fixture
@@ -41,8 +42,26 @@ class TestInputHandler:
             input_handler.load_participants_info(
                 'csv', '3_participants.json')
 
+    @mark.parametrize('files, default', [
+        (['bcd_template.json', 'abc_template.json'], 'abc_template'),
+        (['def_template.json', 'power_template.json'], 'def_template'),
+        (['def_template.json', 'abc_template.json'], 'abc_template'),
+        (['power_template.json', 'def_template.json'], 'def_template'),
+    ])
     @patch('pathlib.Path.iterdir')
-    @mark.parametrize("files", [["abc_template.json", "bcd_template.json"]])
-    def test_load_lottery_template_default(self, input_handler, files):
-        # TODO - work in progress
-        input_handler.load_lottery_template('')
+    def test_load_lottery_template_default(self, mock_iterdir, input_handler,
+                                           files, default):
+        template_path = pathlib.Path(input_handler.data_dir).joinpath(
+            'lottery_templates')
+        pathlib.Path.iterdir.return_value = [
+            template_path.joinpath(f)
+            for f in files]
+
+        template = input_handler.load_lottery_template(None)
+        assert template.name == default
+
+    @mark.parametrize('template_file',
+                      ['abc_template.json', 'def_template.json'])
+    def test_load_lottery_template(self, input_handler, template_file):
+        template = input_handler.load_lottery_template(template_file)
+        assert template_file.startswith(template.name)
